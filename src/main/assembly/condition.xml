@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly>
+    <id>custom-condition</id>
+    <baseDirectory></baseDirectory>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>AllocationFailureCustomCondition</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>./target</directory>
+            <outputDirectory>AllocationFailureCustomCondition</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>

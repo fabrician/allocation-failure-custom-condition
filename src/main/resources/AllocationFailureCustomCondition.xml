@@ -1,0 +1,7 @@
+<AllocationFailureCustomCondition class="com.tibco.fabric.server.AllocationFailureCustomCondition">
+	<property name="name" value="Allocation Failure Custom Condition"/>
+	<property name="componentName" value="Enter Component Name"/>
+	<property name="remediatingComponentName" value="Enter Name of THIS Component"/>
+	<property name="autoDisable" value="True/False if THIS component should auto disable as soon as it completes, if false will wait until all managed components have started"/>
+	<property name="waitFor" value="Number of minutes to wait before disabling"/>	
+</AllocationFailureCustomCondition>
