@@ -1,6 +1,6 @@
 [fabrician.org](http://fabrician.org/)
 ==========================================================================
-Custom Condition - Activation Failure
+Custom Condition - Allocation Failure
 ==========================================================================
 
 Introduction
