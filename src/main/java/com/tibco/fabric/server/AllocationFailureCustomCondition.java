@@ -1,36 +1,22 @@
 package com.tibco.fabric.server;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.List;
+import java.util.logging.Logger;
 
-import com.datasynapse.commons.util.LogUtils;
 import com.datasynapse.fabric.admin.AdminManager;
 import com.datasynapse.fabric.admin.ComponentAdmin;
-import com.datasynapse.fabric.admin.EngineDaemonAdmin;
 import com.datasynapse.fabric.admin.StackAdmin;
-import com.datasynapse.fabric.admin.info.AllocationInfo;
 import com.datasynapse.fabric.admin.info.ComponentAllocationEntryInfo;
-import com.datasynapse.fabric.admin.info.ComponentInfo;
-import com.datasynapse.fabric.admin.info.FabricEngineDaemonInfo;
-import com.datasynapse.fabric.admin.info.RuntimeContextVariableInfo;
-import com.datasynapse.fabric.admin.info.StackInfo;
-import com.datasynapse.fabric.broker.FabricServerEvent;
 import com.datasynapse.fabric.broker.userartifact.condition.AbstractCustomRuleCondition;
-import com.datasynapse.gridserver.admin.Property;
-import com.datasynapse.gridserver.server.ServerEvent;
-import com.datasynapse.gridserver.server.ServerHook;
 
 public class AllocationFailureCustomCondition extends AbstractCustomRuleCondition implements Serializable {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 2443519394918129351L;
-	private String ComponentName = null;
-	private String RemediatingComponentName = null;
-	private String AutoDisable = "false";
-	private String WaitFor = "2";
+	
+	private String componentName = null;
+	private String remediatingComponentName = null;
+	private String autoDisable = "false";
+	private String waitFor = "2";
 	private int intWaitCount = 0;
 	private final StackAdmin sa = AdminManager.getStackAdmin();
 	private final ComponentAdmin ca = AdminManager.getComponentAdmin();
@@ -39,77 +25,74 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
 
 	@Override
 	public String getDescription() {
-		return "Component " + ComponentName + " is unable to activate";
+		return "Component " + componentName + " is unable to activate";
 	}
 
 	@Override
 	public boolean isSatisfied() {
 		boolean satisfied = false;
 		try {
-			ComponentAllocationEntryInfo caei = sa.getComponentAllocationMap().getAllocationEntry(ComponentName);
+			ComponentAllocationEntryInfo caei = sa.getComponentAllocationMap().getAllocationEntry(componentName);
 
 			if (caei != null) {
 				// Allocated Engine Count in ComponentAdmin only returns successfully started Engines
-				int remEngineCountCA = ca.getAllocatedEngineCount(RemediatingComponentName);
+				int remEngineCountCA = ca.getAllocatedEngineCount(remediatingComponentName);
 				// Engine Count in ComponentAllocationEntryInfo includes Allocating but not started Engines
 				int engineCount = caei.getEngineCount();
 				int expectedEngineCount = caei.getExpectedEngineCount();
-				LogUtils.forObject(this).fine("Engine Count " + engineCount + " expectedEngineCount " + expectedEngineCount);
-				
+                Logger.getLogger(getClass().getSimpleName()).fine("Engine Count " + engineCount + " expectedEngineCount " + expectedEngineCount);
 				if (engineCount < expectedEngineCount){
 					satisfied = true;
-					intWaitCount = Integer.parseInt(WaitFor);
+					intWaitCount = Integer.parseInt(waitFor);
 				}
-				if (AutoDisable.equalsIgnoreCase("true") && remEngineCountCA > 0){
+				if (autoDisable.equalsIgnoreCase("true") && remEngineCountCA > 0){
 					//component is active, so we could disable it immediately
 					// however, disabling too soon can cause the component activated event to not be sent.
 					// so, advise waiting a small amount (waitcount at least 2)
 					satisfied = false;
-					LogUtils.forObject(this).fine("Counting down to disablement of " + ComponentName + " " + intWaitCount);
+					Logger.getLogger(getClass().getSimpleName()).fine("Counting down to disablement of " + componentName + " " + intWaitCount);
 					intWaitCount--;
 					if (intWaitCount > 0) {
 						satisfied = true;
 					}
 				}
-
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return satisfied;
 	}
 
 	public String getComponentName() {
-		return ComponentName;
+		return componentName;
 	}
 
-	public void setComponentName(String ComponentName) {
-		this.ComponentName = ComponentName;
+	public void setComponentName(String componentName) {
+		this.componentName = componentName;
 	}
 
 	public String getRemediatingComponentName() {
-		return RemediatingComponentName;
+		return remediatingComponentName;
 	}
 
 	public void setRemediatingComponentName(String remediatingComponentName) {
-		RemediatingComponentName = remediatingComponentName;
+		this.remediatingComponentName = remediatingComponentName;
 	}
 
 	public String getAutoDisable() {
-		return AutoDisable;
+		return autoDisable;
 	}
 
 	public void setAutoDisable(String autoDisable) {
-		AutoDisable = autoDisable;
+		this.autoDisable = autoDisable;
 	}
 	
 	public String getWaitFor() {
-		return WaitFor;
+		return waitFor;
 	}
 
 	public void setWaitFor(String waitFor) {
-		this.WaitFor = waitFor;
+		this.waitFor = waitFor;
 	}
 
 	public void setDescription(String description) {
