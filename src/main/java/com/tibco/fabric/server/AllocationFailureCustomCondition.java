@@ -28,7 +28,6 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
     private final StackAdmin sa = AdminManager.getStackAdmin();
     private final ComponentAdmin ca = AdminManager.getComponentAdmin();
     private String description = null;
-    private String lastModifiedBy = null;
     boolean satisfied = false;
 
     @Override
@@ -104,10 +103,6 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setLastModifiedBy(String lastModifiedBy) {
-        this.lastModifiedBy = lastModifiedBy;
     }
 
 }
