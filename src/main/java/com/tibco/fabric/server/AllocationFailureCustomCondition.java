@@ -29,6 +29,7 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
     private final ComponentAdmin ca = AdminManager.getComponentAdmin();
     private String description = null;
     private String lastModifiedBy = null;
+    boolean satisfied = false;
 
     @Override
     public String getDescription() {
@@ -37,7 +38,6 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
 
     @Override
     public boolean isSatisfied() {
-        boolean satisfied = false;
         try {
             ComponentAllocationEntryInfo caei = sa.getComponentAllocationMap().getAllocationEntry(componentName);
 
@@ -48,7 +48,7 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
                 int engineCount = caei.getEngineCount();
                 int expectedEngineCount = caei.getExpectedEngineCount();
                 Logger.getLogger(getClass().getSimpleName()).fine("Engine Count " + engineCount + " expectedEngineCount " + expectedEngineCount);
-                if (engineCount < expectedEngineCount){
+                if (engineCount < expectedEngineCount && !satisfied){
                     satisfied = true;
                     intWaitCount = Integer.parseInt(waitFor);
                 }
