@@ -68,8 +68,8 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
                 if (engineCount < expectedEngineCount && !satisfied){
                     satisfied = true;
                     // when I first developed this the condition would be tested once per minute
-                    // in 5.5 it seems to be checked every 10 seconds, so multiply the time by 6 to get back to minutes
-                    intWaitCount = Integer.parseInt(waitFor) * 6;
+                    // there could be issues with timing if the polling period changes
+                    intWaitCount = Integer.parseInt(waitFor);
                 }
                 
                 if (autoDisable.equalsIgnoreCase("immediate") && remEngineCount == desiredRemEngineCount){
