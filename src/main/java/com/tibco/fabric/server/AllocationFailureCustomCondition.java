@@ -3,6 +3,18 @@
  * 
  * Use is subject to the terms of the TIBCO license terms accompanying the download of this code. 
  * In most instances, the license terms are contained in a file named license.txt.
+ * 
+ * The AllocationFailureCustomCondition will monitor for a named Component being unable to activate.
+ * If that occurs the condition will become true, which will enable a second Component with the intention
+ * that it would be able to resolve whatever problem is stopping the first Component from starting.  For example
+ * a Tomcat Component may require a specific operating system configuration to run.  If there are no Hosts suitably
+ * configured a Puppet Component (the remediatingComponent) could be started which can apply an appropriate configuration to the OS.
+ * After that, the Puppet Component could be immediately deactivated (after waiting for the waitTime) since its job is done 
+ * and this is the typical expected usage.  
+ * 
+ * However there are circumstances where it could be desirable to wait until the first Component has started up
+ * before deactivating the remediating component, or to never deactivate it and these are catered for with the
+ * "wait" or "never" settings for autoDisable.
  */
 
 package com.tibco.fabric.server;
@@ -10,6 +22,7 @@ package com.tibco.fabric.server;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
+import com.datasynapse.commons.util.LogUtils;
 import com.datasynapse.fabric.admin.AdminManager;
 import com.datasynapse.fabric.admin.ComponentAdmin;
 import com.datasynapse.fabric.admin.StackAdmin;
@@ -22,12 +35,12 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
     
     private String componentName = null;
     private String remediatingComponentName = null;
-    private String autoDisable = "false";
+    private String autoDisable = "immediate";
     private String waitFor = "2";
     private int intWaitCount = 0;
+    private int desiredRemEngineCount = -1;
     private final StackAdmin sa = AdminManager.getStackAdmin();
     private final ComponentAdmin ca = AdminManager.getComponentAdmin();
-    private String description = null;
     boolean satisfied = false;
 
     @Override
@@ -42,21 +55,44 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
 
             if (caei != null) {
                 // Allocated Engine Count in ComponentAdmin only returns successfully started Engines
-                int remEngineCountCA = ca.getAllocatedEngineCount(remediatingComponentName);
+                int remEngineCount = ca.getAllocatedEngineCount(remediatingComponentName);
+                // we want to have one more remediatingComponent than we had before we started i.e. we will have successfully started a new instance of the Component
+                if (desiredRemEngineCount == -1){
+                	desiredRemEngineCount = remEngineCount + 1;
+                	LogUtils.forObject(this).fine("Engine Count for " + remediatingComponentName + " " +remEngineCount + " DesiredEngineCount " + desiredRemEngineCount);
+               }
                 // Engine Count in ComponentAllocationEntryInfo includes Allocating but not started Engines
                 int engineCount = caei.getEngineCount();
                 int expectedEngineCount = caei.getExpectedEngineCount();
-                Logger.getLogger(getClass().getSimpleName()).fine("Engine Count " + engineCount + " expectedEngineCount " + expectedEngineCount);
+                LogUtils.forObject(this).fine("Engine Count for " + componentName + " " + engineCount + " expectedEngineCount " + expectedEngineCount);
                 if (engineCount < expectedEngineCount && !satisfied){
                     satisfied = true;
-                    intWaitCount = Integer.parseInt(waitFor);
+                    // when I first developed this the condition would be tested once per minute
+                    // in 5.5 it seems to be checked every 10 seconds, so multiply the time by 6 to get back to minutes
+                    intWaitCount = Integer.parseInt(waitFor) * 6;
                 }
-                if (autoDisable.equalsIgnoreCase("true") && remEngineCountCA > 0){
-                    //component is active, so we could disable it immediately
+                
+                if (autoDisable.equalsIgnoreCase("immediate") && remEngineCount == desiredRemEngineCount){
+                    // remediating component is active, so we could disable it immediately
+                	// we are not going to wait for the other component to complete starting up
                     // however, disabling too soon can cause the component activated event to not be sent.
+                	// if you have a hook waiting for this event, that can cause problems.
+                    // so, advise waiting a small amount of time (waitCount at least 2)
+                    satisfied = false;
+                    LogUtils.forObject(this).fine("Counting down to disablement of " + remediatingComponentName + " " + intWaitCount);
+                    intWaitCount--;
+                    if (intWaitCount > 0) {
+                        satisfied = true;
+                    }
+                }
+                else if (autoDisable.equalsIgnoreCase("wait") && engineCount == expectedEngineCount){
+                    // all instances of the component we are monitoring are active
+                	// so we can now disable the remediating component
+                    // however, disabling too soon can cause the component activated event to not be sent.
+                	// if you have a hook waiting for this event, that can cause problems.
                     // so, advise waiting a small amount (waitcount at least 2)
                     satisfied = false;
-                    Logger.getLogger(getClass().getSimpleName()).fine("Counting down to disablement of " + componentName + " " + intWaitCount);
+                    LogUtils.forObject(this).fine("Counting down to disablement of " + remediatingComponentName + " " + intWaitCount);
                     intWaitCount--;
                     if (intWaitCount > 0) {
                         satisfied = true;
@@ -90,6 +126,9 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
     }
 
     public void setAutoDisable(String autoDisable) {
+    	// would like to validate here since this is a free text field
+    	// but this would break the presentation of the "help" string that
+    	// prepopulates the txt box in the UI when the Condition is set up 
         this.autoDisable = autoDisable;
     }
     
@@ -99,10 +138,6 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
 
     public void setWaitFor(String waitFor) {
         this.waitFor = waitFor;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
 }
