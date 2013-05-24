@@ -9,7 +9,6 @@ package com.tibco.fabric.server;
 import java.io.Serializable;
 import java.util.logging.Logger;
 
-import com.datasynapse.commons.util.LogUtils;
 import com.datasynapse.fabric.admin.AdminManager;
 import com.datasynapse.fabric.admin.ComponentAdmin;
 import com.datasynapse.fabric.admin.StackAdmin;
@@ -59,12 +58,12 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
                 // we want to have one more remediatingComponent than we had before we started i.e. we will have successfully started a new instance of the Component
                 if (desiredRemEngineCount == -1){
                 	desiredRemEngineCount = remEngineCount + 1;
-                	LogUtils.forObject(this).fine("Engine Count for " + remediatingComponentName + " " +remEngineCount + " DesiredEngineCount " + desiredRemEngineCount);
+                	Logger.getLogger(getClass().getSimpleName()).fine("Engine Count for " + remediatingComponentName + " " +remEngineCount + " DesiredEngineCount " + desiredRemEngineCount);
                }
                 // Engine Count in ComponentAllocationEntryInfo includes Allocating but not started Engines
                 int engineCount = caei.getEngineCount();
                 int expectedEngineCount = caei.getExpectedEngineCount();
-                LogUtils.forObject(this).fine("Engine Count for " + componentName + " " + engineCount + " expectedEngineCount " + expectedEngineCount);
+                Logger.getLogger(getClass().getSimpleName()).fine("Engine Count for " + componentName + " " + engineCount + " expectedEngineCount " + expectedEngineCount);
                 if (engineCount < expectedEngineCount && !satisfied){
                     satisfied = true;
                     // when I first developed this the condition would be tested once per minute
@@ -79,7 +78,7 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
                 	// if you have a hook waiting for this event, that can cause problems.
                     // so, advise waiting a small amount of time (waitCount at least 2)
                     satisfied = false;
-                    LogUtils.forObject(this).fine("Counting down to disablement of " + remediatingComponentName + " " + intWaitCount);
+                    Logger.getLogger(getClass().getSimpleName()).fine("Counting down to disablement of " + remediatingComponentName + " " + intWaitCount);
                     intWaitCount--;
                     if (intWaitCount > 0) {
                         satisfied = true;
@@ -92,7 +91,7 @@ public class AllocationFailureCustomCondition extends AbstractCustomRuleConditio
                 	// if you have a hook waiting for this event, that can cause problems.
                     // so, advise waiting a small amount (waitcount at least 2)
                     satisfied = false;
-                    LogUtils.forObject(this).fine("Counting down to disablement of " + remediatingComponentName + " " + intWaitCount);
+                    Logger.getLogger(getClass().getSimpleName()).fine("Counting down to disablement of " + remediatingComponentName + " " + intWaitCount);
                     intWaitCount--;
                     if (intWaitCount > 0) {
                         satisfied = true;
