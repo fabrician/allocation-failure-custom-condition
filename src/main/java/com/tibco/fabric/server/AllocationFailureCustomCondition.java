@@ -3,20 +3,7 @@
  * 
  * Use is subject to the terms of the TIBCO license terms accompanying the download of this code. 
  * In most instances, the license terms are contained in a file named license.txt.
- * 
- * The AllocationFailureCustomCondition will monitor for a named Component being unable to activate.
- * If that occurs the condition will become true, which will enable a second Component with the intention
- * that it would be able to resolve whatever problem is stopping the first Component from starting.  For example
- * a Tomcat Component may require a specific operating system configuration to run.  If there are no Hosts suitably
- * configured a Puppet Component (the remediatingComponent) could be started which can apply an appropriate configuration to the OS.
- * After that, the Puppet Component could be immediately deactivated (after waiting for the waitTime) since its job is done 
- * and this is the typical expected usage.  
- * 
- * However there are circumstances where it could be desirable to wait until the first Component has started up
- * before deactivating the remediating component, or to never deactivate it and these are catered for with the
- * "wait" or "never" settings for autoDisable.
  */
-
 package com.tibco.fabric.server;
 
 import java.io.Serializable;
@@ -29,6 +16,19 @@ import com.datasynapse.fabric.admin.StackAdmin;
 import com.datasynapse.fabric.admin.info.ComponentAllocationEntryInfo;
 import com.datasynapse.fabric.broker.userartifact.condition.AbstractCustomRuleCondition;
 
+/**
+ * The AllocationFailureCustomCondition will monitor for a named Component being unable to activate.
+ * If that occurs the condition will become true, which will enable a second Component with the intention
+ * that it would be able to resolve whatever problem is stopping the first Component from starting.  For example
+ * a Tomcat Component may require a specific operating system configuration to run.  If there are no Hosts suitably
+ * configured a Puppet Component (the remediatingComponent) could be started which can apply an appropriate configuration to the OS.
+ * After that, the Puppet Component could be immediately deactivated (after waiting for the waitTime) since its job is done 
+ * and this is the typical expected usage.  
+ * 
+ * However there are circumstances where it could be desirable to wait until the first Component has started up
+ * before deactivating the remediating component, or to never deactivate it and these are catered for with the
+ * "wait" or "never" settings for autoDisable.
+ */
 public class AllocationFailureCustomCondition extends AbstractCustomRuleCondition implements Serializable {
 
     private static final long serialVersionUID = 2443519394918129351L;
